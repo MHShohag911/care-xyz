@@ -1,36 +1,69 @@
 "use client";
 
+import { locationData } from "@/data/locations";
 import { Service } from "@/types/service";
 import { BookingFormData, bookingSchema } from "@/validations/booking.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 
 interface BookingFormProps {
     service: Service;
 }
 
 const BookingForm = ({ service }: BookingFormProps) => {
-    const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<BookingFormData>({
-    resolver: zodResolver(bookingSchema),
-    defaultValues: {
-      durationType: "hour",
-      durationValue: 1,
-      division: "",
-      district: "",
-      city: "",
-      area: "",
-      address: "",
-      phone: "",
-    },
-  });
+    const [selectedDivision, setSelectedDivision] = useState("");
+    const [selectedDistrict, setSelectedDistrict] = useState("");
+    const [selectedCity, setSelectedCity] = useState("");
 
-  const onSubmit = (data: BookingFormData) => {
-    console.log(data);
-  };
+    const {
+        register,
+        handleSubmit,
+        control,
+        setValue,
+        formState: { errors },
+    } = useForm<BookingFormData>({
+        resolver: zodResolver(bookingSchema),
+        defaultValues: {
+            durationType: "hour",
+            durationValue: 1,
+            division: "",
+            district: "",
+            city: "",
+            area: "",
+            address: "",
+            phone: "",
+        },
+    });
+
+    const durationType = useWatch({
+        control,
+        name: "durationType",
+    });
+
+    const durationValue = useWatch({
+        control,
+        name: "durationValue",
+    });
+
+    const rate =
+        durationType === "day"
+            ? service.dailyRate
+            : service.hourlyRate;
+
+    const totalCost =
+        Number.isFinite(durationValue) && durationValue > 0
+            ? durationValue * rate
+            : 0;
+
+    const onSubmit = (data: BookingFormData) => {
+        console.log({
+            ...data,
+            serviceId: service._id,
+            serviceName: service.name,
+            totalCost,
+        });
+    };
     return (
         <div>
             <form
@@ -97,12 +130,30 @@ const BookingForm = ({ service }: BookingFormProps) => {
                         Division
                     </label>
 
-                    <input
+                    <select
                         id="division"
                         {...register("division")}
+                        onChange={(event) => {
+                            const division = event.target.value;
+
+                            setSelectedDivision(division);
+                            setSelectedDistrict("");
+                            setSelectedCity("");
+
+                            setValue("district", "");
+                            setValue("city", "");
+                            setValue("area", "");
+                        }}
                         className="mt-2 w-full rounded-lg border px-4 py-3"
-                        placeholder="Enter division"
-                    />
+                    >
+                        <option value="">Select division</option>
+
+                        {locationData.map((division) => (
+                            <option key={division.name} value={division.name}>
+                                {division.name}
+                            </option>
+                        ))}
+                    </select>
 
                     {errors.division && (
                         <p className="mt-1 text-sm text-red-500">
@@ -120,12 +171,31 @@ const BookingForm = ({ service }: BookingFormProps) => {
                         District
                     </label>
 
-                    <input
+                    <select
                         id="district"
                         {...register("district")}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                        placeholder="Enter district"
-                    />
+                        disabled={!selectedDivision}
+                        onChange={(event) => {
+                            const district = event.target.value;
+
+                            setSelectedDistrict(district);
+                            setSelectedCity("");
+
+                            setValue("city", "");
+                            setValue("area", "");
+                        }}
+                        className="mt-2 w-full rounded-lg border px-4 py-3 disabled:bg-gray-100"
+                    >
+                        <option value="">Select district</option>
+
+                        {locationData
+                            .find((division) => division.name === selectedDivision)
+                            ?.districts.map((district) => (
+                                <option key={district.name} value={district.name}>
+                                    {district.name}
+                                </option>
+                            ))}
+                    </select>
 
                     {errors.district && (
                         <p className="mt-1 text-sm text-red-500">
@@ -143,12 +213,29 @@ const BookingForm = ({ service }: BookingFormProps) => {
                         City
                     </label>
 
-                    <input
+                    <select
                         id="city"
                         {...register("city")}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                        placeholder="Enter city"
-                    />
+                        disabled={!selectedDistrict}
+                        onChange={(event) => {
+                            const city = event.target.value;
+
+                            setSelectedCity(city);
+                            setValue("area", "");
+                        }}
+                        className="mt-2 w-full rounded-lg border px-4 py-3 disabled:bg-gray-100"
+                    >
+                        <option value="">Select city</option>
+
+                        {locationData
+                            .flatMap((division) => division.districts)
+                            .find((district) => district.name === selectedDistrict)
+                            ?.cities.map((city) => (
+                                <option key={city.name} value={city.name}>
+                                    {city.name}
+                                </option>
+                            ))}
+                    </select>
 
                     {errors.city && (
                         <p className="mt-1 text-sm text-red-500">
@@ -166,12 +253,24 @@ const BookingForm = ({ service }: BookingFormProps) => {
                         Area
                     </label>
 
-                    <input
+                    <select
                         id="area"
                         {...register("area")}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                        placeholder="Enter area"
-                    />
+                        disabled={!selectedCity}
+                        className="mt-2 w-full rounded-lg border px-4 py-3 disabled:bg-gray-100"
+                    >
+                        <option value="">Select area</option>
+
+                        {locationData
+                            .flatMap((division) => division.districts)
+                            .flatMap((district) => district.cities)
+                            .find((city) => city.name === selectedCity)
+                            ?.areas.map((area) => (
+                                <option key={area.name} value={area.name}>
+                                    {area.name}
+                                </option>
+                            ))}
+                    </select>
 
                     {errors.area && (
                         <p className="mt-1 text-sm text-red-500">
@@ -231,11 +330,11 @@ const BookingForm = ({ service }: BookingFormProps) => {
                 {/* Price */}
                 <div className="rounded-lg border p-4">
                     <p className="font-medium">
-                        Hourly rate: ৳{service.hourlyRate}
+                        Hourly rate: ৳{rate}/{durationType}
                     </p>
 
                     <p className="mt-2 text-lg font-semibold">
-                        Total: ৳0
+                        Total: ৳{totalCost}
                     </p>
                 </div>
 
