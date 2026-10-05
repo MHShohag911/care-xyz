@@ -1,3 +1,5 @@
+"use client";
+
 import { Button as HeroButton } from "@heroui/react";
 
 export function Button({

@@ -1,6 +1,8 @@
+
 import BookingForm from "@/components/booking/BookingForm";
+import { auth } from "@/lib/auth";
 import { getServiceById } from "@/models/service";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 interface BookingPageProps {
     params: Promise<{
@@ -9,7 +11,13 @@ interface BookingPageProps {
 }
 
 const BookingPage = async ({ params }: BookingPageProps) => {
+    const session = await auth();
     const { serviceId } = await params;
+
+    if(!session?.user){
+        redirect(`/login?callbackUrl=${encodeURIComponent(`/booking/${serviceId}`)}`);
+    }
+
     const service = await getServiceById(serviceId);
     if (!service) {
         notFound();

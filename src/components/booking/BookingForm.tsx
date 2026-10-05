@@ -6,6 +6,8 @@ import { BookingFormData, bookingSchema } from "@/validations/booking.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { createBooking } from "@/actions/booking.actions";
+import { useRouter } from "next/navigation";
 
 interface BookingFormProps {
     service: Service;
@@ -15,6 +17,7 @@ const BookingForm = ({ service }: BookingFormProps) => {
     const [selectedDivision, setSelectedDivision] = useState("");
     const [selectedDistrict, setSelectedDistrict] = useState("");
     const [selectedCity, setSelectedCity] = useState("");
+    const router = useRouter();
 
     const {
         register,
@@ -56,13 +59,15 @@ const BookingForm = ({ service }: BookingFormProps) => {
             ? durationValue * rate
             : 0;
 
-    const onSubmit = (data: BookingFormData) => {
-        console.log({
-            ...data,
-            serviceId: service._id,
-            serviceName: service.name,
-            totalCost,
-        });
+    const onSubmit = async (data: BookingFormData) => {
+        const result = await createBooking(service._id!, data);
+
+        if (!result.success) {
+            console.error(result.message);
+            return;
+        }
+
+        router.push(`/my-bookings/${result.bookingId}`);
     };
     return (
         <div>

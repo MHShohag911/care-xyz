@@ -4,11 +4,13 @@ import { registerUser } from "@/actions/auth.actions";
 import { RegisterFormdata, registerSchema } from "@/validations/auth.schema";
 import { Button, Card, Form, Input, Label, TextField } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 const Register = () => {
     const [message, setMessage] = useState("");
+    const router = useRouter();
     const {
         register,
         handleSubmit,
@@ -26,6 +28,7 @@ const Register = () => {
 
         if(result.success){
             reset();
+            router.push("/login")
         }
     };
 
@@ -163,6 +166,7 @@ const Register = () => {
                         Register
                     </Button>
                 </Form>
+                <p className="mt-6 text-center text-sm text-gray-500"> Already have an account?{" "} <a href="/login" className="font-medium text-black underline"> Login </a> </p>
             </Card>
         </div>
     );
