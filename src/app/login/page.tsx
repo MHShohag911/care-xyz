@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button, Card, Form, Input, Label, Link, TextField } from "@heroui/react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -14,7 +14,7 @@ const loginSchema = z.object({
 });
 type LoginFormData = z.infer<typeof loginSchema>;
 
-const Login = () => {
+const LoginForm = () => {
     const [message, setMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -102,4 +102,12 @@ const Login = () => {
     );
 };
 
-export default Login;
+// export default LoginForm;
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p>Loading login...</p>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
