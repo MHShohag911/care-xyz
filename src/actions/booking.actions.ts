@@ -109,30 +109,39 @@ export async function createBooking(
     };
 }
 
-export async function cancelBooking(bookingId: string){
+export async function cancelBooking(bookingId: string) {
     const session = await auth();
 
-    if(!session?.user?.email){
+    if (!session?.user?.email) {
         return {
             success: false,
             message: "You must be logged in."
         };
     }
 
-    const cancelled = await cancelBookingModel(
-        bookingId,
-        session.user.email
-    );
+    try {
+        const cancelled = await cancelBookingModel(
+            bookingId,
+            session.user.email
+        );
 
-    if(!cancelled){
+        if (!cancelled) {
+            return {
+                success: false,
+                message: "Booking could not be cancelled. It may not exist, may belong to another user, or may already be completed or cancelled.",
+            };
+        }
+
+        return {
+            success: true,
+            message: "Booking cancelled successfully."
+        };
+    } catch (error) {
+        console.error("Failed to cancel booking: ", error);
+
         return {
             success: false,
-            message: "Booking could no be cancelled.",
-        };
+            message: "Something went wrong. Please try again."
+        }
     }
-
-    return {
-        success: true,
-        message: "Booking cancelled successfully."
-    };
 }

@@ -1,3 +1,4 @@
+import BookingStatusBadge from '@/components/booking/BookingStatusBadge';
 import { auth } from '@/lib/auth';
 import { getBookingsByUserId } from '@/models/booking';
 import Link from 'next/link';
@@ -39,7 +40,12 @@ const page = async () => {
 
                                     <p>Total: ৳{booking.totalCost}</p>
 
-                                    <p>Status: {booking.status}</p>
+                                    <div className="mt-3 flex items-center gap-2">
+                                        <span className="text-sm font-medium text-gray-600">
+                                            Status:
+                                        </span>
+                                        <BookingStatusBadge status={booking.status} />
+                                    </div>
 
                                     <Link
                                         href={`/my-bookings/${booking._id}`}

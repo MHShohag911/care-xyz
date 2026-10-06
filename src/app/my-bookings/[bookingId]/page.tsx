@@ -1,3 +1,4 @@
+import BookingStatusBadge from "@/components/booking/BookingStatusBadge";
 import CancelBookingButton from "@/components/booking/CancelBookingButton";
 import { auth } from "@/lib/auth";
 import { getBookingById } from "@/models/booking";
@@ -38,12 +39,10 @@ const BookingDetailsPage = async ({ params }: { params: Promise<{ bookingId: str
                     <strong>Total Cost:</strong> ৳{booking.totalCost}
                 </p>
 
-                <p>
-                    <strong>Status</strong>:{" "}
-                    <span className="capitalize">
-                        {booking.status}
-                    </span>
-                </p>
+                <div className="flex items-center gap-2">
+                    <strong>Status:</strong>
+                    <BookingStatusBadge status={booking.status} />
+                </div>
 
                 {booking.status !== "cancelled" &&
                     booking.status !== "completed" && (

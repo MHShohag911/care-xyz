@@ -67,6 +67,7 @@ export async function cancelBooking(
     {
       _id: new ObjectId(bookingId),
       userId,
+      status: { $in: ["pending", "confirmed"]},
     },
     {
       $set: {
