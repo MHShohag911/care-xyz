@@ -2,7 +2,7 @@
 
 import { getServiceById } from "@/models/service";
 import { bookingSchema } from "@/validations/booking.schema";
-import { createBooking as insertBooking } from "@/models/booking";
+import { cancelBooking as cancelBookingModel, createBooking as insertBooking } from "@/models/booking";
 import { auth } from "@/lib/auth";
 
 
@@ -109,3 +109,30 @@ export async function createBooking(
     };
 }
 
+export async function cancelBooking(bookingId: string){
+    const session = await auth();
+
+    if(!session?.user?.email){
+        return {
+            success: false,
+            message: "You must be logged in."
+        };
+    }
+
+    const cancelled = await cancelBookingModel(
+        bookingId,
+        session.user.email
+    );
+
+    if(!cancelled){
+        return {
+            success: false,
+            message: "Booking could no be cancelled.",
+        };
+    }
+
+    return {
+        success: true,
+        message: "Booking cancelled successfully."
+    };
+}
