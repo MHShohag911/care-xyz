@@ -33,13 +33,16 @@ export default function Navbar() {
                     </li>
 
                     <li>
-                        <Button
-                            as={HeroLink}
+                        <Link
                             href="/login"
-                            variant="primary"
                         >
-                            Login
-                        </Button>
+                            <Button
+                                variant="primary"
+                            >
+                                Login
+                            </Button>
+                        </Link>
+
                     </li>
                 </ul>
 
@@ -78,14 +81,15 @@ export default function Navbar() {
                         </li>
 
                         <li>
-                            <Button
-                                as={HeroLink}
+                            <Link
                                 href="/login"
-                                variant="primary"
-                                onPress={() => setIsOpen(false)}
                             >
-                                Login
-                            </Button>
+                                <Button
+                                    variant="primary"
+                                >
+                                    Login
+                                </Button>
+                            </Link>
                         </li>
                     </ul>
                 </div>
