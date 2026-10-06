@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { Button, Link as HeroLink } from "@heroui/react";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const { data: session, status } = useSession();
+
+    const isLoggedIn = status === "authenticated";
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-default bg-background/80 backdrop-blur-md">
@@ -33,16 +38,17 @@ export default function Navbar() {
                     </li>
 
                     <li>
-                        <Link
-                            href="/login"
-                        >
-                            <Button
-                                variant="primary"
-                            >
-                                Login
-                            </Button>
-                        </Link>
-
+                        {status === "loading" ? (
+                            <div className="h-10 w-20 animate-pulse rounded-lg bg-default-100" />
+                        ) : isLoggedIn ? (
+                            <LogoutButton />
+                        ) : (
+                            <Link href="/login">
+                                <Button variant="primary">
+                                    Login
+                                </Button>
+                            </Link>
+                        )}
                     </li>
                 </ul>
 
@@ -63,33 +69,47 @@ export default function Navbar() {
                 <div className="border-t border-default px-6 py-4 md:hidden">
                     <ul className="flex flex-col gap-4">
                         <li>
-                            <HeroLink href="/" onClick={() => setIsOpen(false)}>
+                            <HeroLink
+                                href="/"
+                                onClick={() => setIsOpen(false)}
+                            >
                                 Home
                             </HeroLink>
                         </li>
 
                         <li>
-                            <HeroLink href="/services" onClick={() => setIsOpen(false)}>
+                            <HeroLink
+                                href="/services"
+                                onClick={() => setIsOpen(false)}
+                            >
                                 Services
                             </HeroLink>
                         </li>
 
                         <li>
-                            <HeroLink href="/my-bookings" onClick={() => setIsOpen(false)}>
+                            <HeroLink
+                                href="/my-bookings"
+                                onClick={() => setIsOpen(false)}
+                            >
                                 My Bookings
                             </HeroLink>
                         </li>
 
                         <li>
-                            <Link
-                                href="/login"
-                            >
-                                <Button
-                                    variant="primary"
+                            {status === "loading" ? (
+                                <div className="h-10 w-20 animate-pulse rounded-lg bg-default-100" />
+                            ) : isLoggedIn ? (
+                                <LogoutButton />
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    onClick={() => setIsOpen(false)}
                                 >
-                                    Login
-                                </Button>
-                            </Link>
+                                    <Button variant="primary">
+                                        Login
+                                    </Button>
+                                </Link>
+                            )}
                         </li>
                     </ul>
                 </div>
