@@ -6,7 +6,20 @@ export default async function ServicesPage() {
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Our Services</h1>
+      <div className="max-w-2xl">
+        <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+          Our Services
+        </p>
+
+        <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+          Care services for every stage of life
+        </h1>
+
+        <p className="mt-4 text-lg leading-7 text-default-500">
+          Choose from our trusted care services and find the right support
+          for your family.
+        </p>
+      </div>
 
       <div className="mt-8 grid gap-6 md:grid-cols-3">
         {services.map((service) => (

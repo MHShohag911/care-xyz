@@ -1,357 +1,518 @@
 "use client";
 
-import { locationData } from "@/data/locations";
-import { Service } from "@/types/service";
-import { BookingFormData, bookingSchema } from "@/validations/booking.schema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
 import { createBooking } from "@/actions/booking.actions";
+import { locationData } from "@/data/locations";
+import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  ListBox,
+  Select,
+  TextArea,
+  TextField,
+} from "@heroui/react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import type { Key } from "react-aria-components";
+import { useState } from "react";
+import { Service } from "@/types/service";
+import {
+  BookingFormData,
+  bookingSchema,
+} from "@/validations/booking.schema";
 
 interface BookingFormProps {
-    service: Service;
+  service: Service;
 }
 
 const BookingForm = ({ service }: BookingFormProps) => {
-    const [selectedDivision, setSelectedDivision] = useState("");
-    const [selectedDistrict, setSelectedDistrict] = useState("");
-    const [selectedCity, setSelectedCity] = useState("");
-    const router = useRouter();
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
 
-    const {
-        register,
-        handleSubmit,
-        control,
-        setValue,
-        formState: { errors },
-    } = useForm<BookingFormData>({
-        resolver: zodResolver(bookingSchema),
-        defaultValues: {
-            durationType: "hour",
-            durationValue: 1,
-            division: "",
-            district: "",
-            city: "",
-            area: "",
-            address: "",
-            phone: "",
-        },
-    });
+  const router = useRouter();
 
-    const durationType = useWatch({
-        control,
-        name: "durationType",
-    });
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm<BookingFormData>({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      durationType: "hour",
+      durationValue: 1,
+      division: "",
+      district: "",
+      city: "",
+      area: "",
+      address: "",
+      phone: "",
+    },
+  });
 
-    const durationValue = useWatch({
-        control,
-        name: "durationValue",
-    });
+  const durationType = useWatch({
+    control,
+    name: "durationType",
+  });
 
-    const rate =
-        durationType === "day"
-            ? service.dailyRate
-            : service.hourlyRate;
+  const durationValue = useWatch({
+    control,
+    name: "durationValue",
+  });
 
-    const totalCost =
-        Number.isFinite(durationValue) && durationValue > 0
-            ? durationValue * rate
-            : 0;
+  const rate =
+    durationType === "day"
+      ? service.dailyRate
+      : service.hourlyRate;
 
-    const onSubmit = async (data: BookingFormData) => {
-        const result = await createBooking(service._id!, data);
+  const totalCost =
+    Number.isFinite(durationValue) && durationValue > 0
+      ? durationValue * rate
+      : 0;
 
-        if (!result.success) {
-            console.error(result.message);
-            return;
-        }
+  const onSubmit = async (data: BookingFormData) => {
+    const result = await createBooking(service._id!, data);
 
-        router.push(`/my-bookings/${result.bookingId}`);
-    };
+    if (!result.success) {
+      console.error(result.message);
+      return;
+    }
+
+    router.push(`/my-bookings/${result.bookingId}`);
+  };
+
+  const getDistricts = () => {
     return (
-        <div>
-            <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="mt-8 space-y-6"
-            >
-                {/* Duration Type */}
-                <div>
-                    <label
-                        htmlFor="durationType"
-                        className="block text-sm font-medium"
-                    >
-                        Duration Type
-                    </label>
-
-                    <select
-                        id="durationType"
-                        {...register("durationType")}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                    >
-                        <option value="hour">Hour</option>
-                        <option value="day">Day</option>
-                    </select>
-
-                    {errors.durationType && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.durationType.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* Duration */}
-                <div>
-                    <label
-                        htmlFor="durationValue"
-                        className="block text-sm font-medium"
-                    >
-                        Duration
-                    </label>
-
-                    <input
-                        id="durationValue"
-                        type="number"
-                        min="1"
-                        {...register("durationValue", {
-                            valueAsNumber: true,
-                        })}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                    />
-
-                    {errors.durationValue && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.durationValue.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* Division */}
-                <div>
-                    <label
-                        htmlFor="division"
-                        className="block text-sm font-medium"
-                    >
-                        Division
-                    </label>
-
-                    <select
-                        id="division"
-                        {...register("division")}
-                        onChange={(event) => {
-                            const division = event.target.value;
-
-                            setSelectedDivision(division);
-                            setSelectedDistrict("");
-                            setSelectedCity("");
-
-                            setValue("district", "");
-                            setValue("city", "");
-                            setValue("area", "");
-                        }}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                    >
-                        <option value="">Select division</option>
-
-                        {locationData.map((division) => (
-                            <option key={division.name} value={division.name}>
-                                {division.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    {errors.division && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.division.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* District */}
-                <div>
-                    <label
-                        htmlFor="district"
-                        className="block text-sm font-medium"
-                    >
-                        District
-                    </label>
-
-                    <select
-                        id="district"
-                        {...register("district")}
-                        disabled={!selectedDivision}
-                        onChange={(event) => {
-                            const district = event.target.value;
-
-                            setSelectedDistrict(district);
-                            setSelectedCity("");
-
-                            setValue("city", "");
-                            setValue("area", "");
-                        }}
-                        className="mt-2 w-full rounded-lg border px-4 py-3 disabled:bg-gray-100"
-                    >
-                        <option value="">Select district</option>
-
-                        {locationData
-                            .find((division) => division.name === selectedDivision)
-                            ?.districts.map((district) => (
-                                <option key={district.name} value={district.name}>
-                                    {district.name}
-                                </option>
-                            ))}
-                    </select>
-
-                    {errors.district && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.district.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* City */}
-                <div>
-                    <label
-                        htmlFor="city"
-                        className="block text-sm font-medium"
-                    >
-                        City
-                    </label>
-
-                    <select
-                        id="city"
-                        {...register("city")}
-                        disabled={!selectedDistrict}
-                        onChange={(event) => {
-                            const city = event.target.value;
-
-                            setSelectedCity(city);
-                            setValue("area", "");
-                        }}
-                        className="mt-2 w-full rounded-lg border px-4 py-3 disabled:bg-gray-100"
-                    >
-                        <option value="">Select city</option>
-
-                        {locationData
-                            .flatMap((division) => division.districts)
-                            .find((district) => district.name === selectedDistrict)
-                            ?.cities.map((city) => (
-                                <option key={city.name} value={city.name}>
-                                    {city.name}
-                                </option>
-                            ))}
-                    </select>
-
-                    {errors.city && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.city.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* Area */}
-                <div>
-                    <label
-                        htmlFor="area"
-                        className="block text-sm font-medium"
-                    >
-                        Area
-                    </label>
-
-                    <select
-                        id="area"
-                        {...register("area")}
-                        disabled={!selectedCity}
-                        className="mt-2 w-full rounded-lg border px-4 py-3 disabled:bg-gray-100"
-                    >
-                        <option value="">Select area</option>
-
-                        {locationData
-                            .flatMap((division) => division.districts)
-                            .flatMap((district) => district.cities)
-                            .find((city) => city.name === selectedCity)
-                            ?.areas.map((area) => (
-                                <option key={area.name} value={area.name}>
-                                    {area.name}
-                                </option>
-                            ))}
-                    </select>
-
-                    {errors.area && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.area.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* Address */}
-                <div>
-                    <label
-                        htmlFor="address"
-                        className="block text-sm font-medium"
-                    >
-                        Full Address
-                    </label>
-
-                    <textarea
-                        id="address"
-                        {...register("address")}
-                        rows={4}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                        placeholder="Enter your full address"
-                    />
-
-                    {errors.address && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.address.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* Phone */}
-                <div>
-                    <label
-                        htmlFor="phone"
-                        className="block text-sm font-medium"
-                    >
-                        Phone Number
-                    </label>
-
-                    <input
-                        id="phone"
-                        type="tel"
-                        {...register("phone")}
-                        className="mt-2 w-full rounded-lg border px-4 py-3"
-                        placeholder="Enter your phone number"
-                    />
-
-                    {errors.phone && (
-                        <p className="mt-1 text-sm text-red-500">
-                            {errors.phone.message}
-                        </p>
-                    )}
-                </div>
-
-                {/* Price */}
-                <div className="rounded-lg border p-4">
-                    <p className="font-medium">
-                        Hourly rate: ৳{rate}/{durationType}
-                    </p>
-
-                    <p className="mt-2 text-lg font-semibold">
-                        Total: ৳{totalCost}
-                    </p>
-                </div>
-
-                <button
-                    type="submit"
-                    className="rounded-lg bg-black px-5 py-3 font-medium text-white"
-                >
-                    Confirm Booking
-                </button>
-            </form>
-        </div>
+      locationData.find(
+        (division) => division.name === selectedDivision
+      )?.districts ?? []
     );
+  };
+
+  const getCities = () => {
+    return (
+      getDistricts().find(
+        (district) => district.name === selectedDistrict
+      )?.cities ?? []
+    );
+  };
+
+  const getAreas = () => {
+    return (
+      getCities().find(
+        (city) => city.name === selectedCity
+      )?.areas ?? []
+    );
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-8"
+    >
+      {/* Duration */}
+      <section>
+        <div className="mb-5">
+          <h3 className="text-lg font-semibold">
+            Service Duration
+          </h3>
+
+          <p className="mt-1 text-sm text-default-500">
+            Choose how long you need the care service.
+          </p>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* Duration Type */}
+          <Controller
+            name="durationType"
+            control={control}
+            render={({ field }) => (
+              <Select
+                selectedKey={field.value}
+                onSelectionChange={(value) => {
+                  field.onChange(value);
+                }}
+                placeholder="Select duration type"
+                isInvalid={!!errors.durationType}
+                className="w-full"
+              >
+                <Label>Duration Type</Label>
+
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item
+                      id="hour"
+                      textValue="Hour"
+                    >
+                      Hour
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+
+                    <ListBox.Item
+                      id="day"
+                      textValue="Day"
+                    >
+                      Day
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+
+                {errors.durationType && (
+                  <FieldError>
+                    {errors.durationType.message}
+                  </FieldError>
+                )}
+              </Select>
+            )}
+          />
+
+          {/* Duration Value */}
+          <TextField
+            isInvalid={!!errors.durationValue}
+            className="w-full"
+          >
+            <Label>Duration</Label>
+
+            <Input
+              type="number"
+              min={1}
+              {...register("durationValue", {
+                valueAsNumber: true,
+              })}
+              placeholder="Enter duration"
+            />
+
+            {errors.durationValue && (
+              <FieldError>
+                {errors.durationValue.message}
+              </FieldError>
+            )}
+          </TextField>
+        </div>
+      </section>
+
+      {/* Location */}
+      <section>
+        <div className="mb-5">
+          <h3 className="text-lg font-semibold">
+            Care Location
+          </h3>
+
+          <p className="mt-1 text-sm text-default-500">
+            Select where the care service will be provided.
+          </p>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* Division */}
+          <Controller
+            name="division"
+            control={control}
+            render={({ field }) => (
+              <Select
+                selectedKey={field.value || null}
+                onSelectionChange={(value: Key | null) => {
+                  const division = value?.toString() ?? "";
+
+                  field.onChange(division);
+
+                  setSelectedDivision(division);
+                  setSelectedDistrict("");
+                  setSelectedCity("");
+
+                  setValue("district", "");
+                  setValue("city", "");
+                  setValue("area", "");
+                }}
+                placeholder="Select division"
+                isInvalid={!!errors.division}
+                className="w-full"
+              >
+                <Label>Division</Label>
+
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+
+                <Select.Popover>
+                  <ListBox>
+                    {locationData.map((division) => (
+                      <ListBox.Item
+                        key={division.name}
+                        id={division.name}
+                        textValue={division.name}
+                      >
+                        {division.name}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+
+                {errors.division && (
+                  <FieldError>
+                    {errors.division.message}
+                  </FieldError>
+                )}
+              </Select>
+            )}
+          />
+
+          {/* District */}
+          <Controller
+            name="district"
+            control={control}
+            render={({ field }) => (
+              <Select
+                selectedKey={field.value || null}
+                onSelectionChange={(value: Key | null) => {
+                  const district = value?.toString() ?? "";
+
+                  field.onChange(district);
+
+                  setSelectedDistrict(district);
+                  setSelectedCity("");
+
+                  setValue("city", "");
+                  setValue("area", "");
+                }}
+                placeholder="Select district"
+                isDisabled={!selectedDivision}
+                isInvalid={!!errors.district}
+                className="w-full"
+              >
+                <Label>District</Label>
+
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+
+                <Select.Popover>
+                  <ListBox>
+                    {getDistricts().map((district) => (
+                      <ListBox.Item
+                        key={district.name}
+                        id={district.name}
+                        textValue={district.name}
+                      >
+                        {district.name}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+
+                {errors.district && (
+                  <FieldError>
+                    {errors.district.message}
+                  </FieldError>
+                )}
+              </Select>
+            )}
+          />
+
+          {/* City */}
+          <Controller
+            name="city"
+            control={control}
+            render={({ field }) => (
+              <Select
+                selectedKey={field.value || null}
+                onSelectionChange={(value: Key | null) => {
+                  const city = value?.toString() ?? "";
+
+                  field.onChange(city);
+
+                  setSelectedCity(city);
+                  setValue("area", "");
+                }}
+                placeholder="Select city"
+                isDisabled={!selectedDistrict}
+                isInvalid={!!errors.city}
+                className="w-full"
+              >
+                <Label>City</Label>
+
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+
+                <Select.Popover>
+                  <ListBox>
+                    {getCities().map((city) => (
+                      <ListBox.Item
+                        key={city.name}
+                        id={city.name}
+                        textValue={city.name}
+                      >
+                        {city.name}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+
+                {errors.city && (
+                  <FieldError>
+                    {errors.city.message}
+                  </FieldError>
+                )}
+              </Select>
+            )}
+          />
+
+          {/* Area */}
+          <Controller
+            name="area"
+            control={control}
+            render={({ field }) => (
+              <Select
+                selectedKey={field.value || null}
+                onSelectionChange={(value: Key | null) => {
+                  field.onChange(value?.toString() ?? "");
+                }}
+                placeholder="Select area"
+                isDisabled={!selectedCity}
+                isInvalid={!!errors.area}
+                className="w-full"
+              >
+                <Label>Area</Label>
+
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+
+                <Select.Popover>
+                  <ListBox>
+                    {getAreas().map((area) => (
+                      <ListBox.Item
+                        key={area.name}
+                        id={area.name}
+                        textValue={area.name}
+                      >
+                        {area.name}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+
+                {errors.area && (
+                  <FieldError>
+                    {errors.area.message}
+                  </FieldError>
+                )}
+              </Select>
+            )}
+          />
+        </div>
+
+        {/* Full Address */}
+        <TextField
+          isInvalid={!!errors.address}
+          className="mt-5 w-full"
+        >
+          <Label>Full Address</Label>
+
+          <TextArea
+            {...register("address")}
+            rows={4}
+            placeholder="Enter your complete address"
+          />
+
+          {errors.address && (
+            <FieldError>
+              {errors.address.message}
+            </FieldError>
+          )}
+        </TextField>
+      </section>
+
+      {/* Contact */}
+      <section>
+        <div className="mb-5">
+          <h3 className="text-lg font-semibold">
+            Contact Information
+          </h3>
+
+          <p className="mt-1 text-sm text-default-500">
+            Provide a phone number we can use for this booking.
+          </p>
+        </div>
+
+        <TextField
+          isInvalid={!!errors.phone}
+          className="w-full"
+        >
+          <Label>Phone Number</Label>
+
+          <Input
+            type="tel"
+            {...register("phone")}
+            placeholder="Enter your phone number"
+          />
+
+          {errors.phone && (
+            <FieldError>
+              {errors.phone.message}
+            </FieldError>
+          )}
+        </TextField>
+      </section>
+
+      {/* Price Summary */}
+      <section className="rounded-2xl border border-default bg-default-50 p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-default-500">
+              Rate
+            </p>
+
+            <p className="mt-1 font-semibold">
+              ৳{rate.toLocaleString()} /{" "}
+              {durationType === "day" ? "day" : "hour"}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-sm text-default-500">
+              Estimated Total
+            </p>
+
+            <p className="mt-1 text-2xl font-bold">
+              ৳{totalCost.toLocaleString()}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Submit */}
+      <div className="flex justify-end border-t border-default pt-6">
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+        >
+          Confirm Booking
+        </Button>
+      </div>
+    </form>
+  );
 };
 
 export default BookingForm;
