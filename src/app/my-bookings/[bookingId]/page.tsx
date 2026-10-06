@@ -2,6 +2,7 @@ import BookingStatusBadge from "@/components/booking/BookingStatusBadge";
 import CancelBookingButton from "@/components/booking/CancelBookingButton";
 import { auth } from "@/lib/auth";
 import { getBookingById } from "@/models/booking";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 const BookingDetailsPage = async ({ params }: { params: Promise<{ bookingId: string }> }) => {
@@ -19,6 +20,12 @@ const BookingDetailsPage = async ({ params }: { params: Promise<{ bookingId: str
     }
     return (
         <div className="mx-auto max-w-4xl px-6 py-12">
+            <Link
+                href="/my-bookings"
+                className="mb-6 inline-block text-sm font-medium text-gray-600 hover:text-black"
+            >
+                ← Back to My Bookings
+            </Link>
             <h1 className="text-3xl font-bold">Booking Details</h1>
 
             <div className="mt-6 space-y-4 rounded-xl border p-6">
