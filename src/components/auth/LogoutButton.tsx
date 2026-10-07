@@ -1,19 +1,16 @@
-"use client"
+"use client";
 
-import { Button } from '../ui/Button';
-import { signOut } from 'next-auth/react';
+import { signOut } from "next-auth/react";
+import { Button } from "@heroui/react";
 
-const LogoutButton =  () => {
-    return (
-        <div>
-            <Button
-                onPress={() => signOut({ redirectTo: "/login" })}
-                variant="secondary"
-            >
-                Logout
-            </Button>
-        </div>
-    );
-};
-
-export default LogoutButton;
+export default function LogoutButton() {
+  return (
+    <Button
+      type="button"
+      variant="danger"
+      onPress={() => signOut({ redirectTo: "/login" })}
+    >
+      Logout
+    </Button>
+  );
+}

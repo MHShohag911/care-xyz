@@ -11,20 +11,33 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Crazy-xyz",
-  description: "A trusted caregiving service platform for baby, elderly, and special care services.",
+  title: {
+    default: "Care.xyz",
+    template: "%s | Care.xyz",
+  },
+  description:
+    "Care.xyz is a trusted caregiving platform for baby, elderly, and special care services.",
+  keywords: [
+    "Care.xyz",
+    "caregiving",
+    "baby care",
+    "elderly care",
+    "care services",
+  ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: LayoutProps<"/">) {
   return (
     <html
       lang="en"
       className={`${dmSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <AuthSessionProvider>
           <Navbar />
-          {children}
+          <main className="flex-1">{children}</main>
           <Footer />
         </AuthSessionProvider>
       </body>

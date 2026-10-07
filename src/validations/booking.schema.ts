@@ -5,7 +5,8 @@ export const bookingSchema = z.object({
   durationValue: z
     .number()
     .int()
-    .min(1, "Duration must be at least 1."),
+    .min(1, "Duration must be at least 1.")
+    .max(30, "Duration cannot exceed 30."),
 
   division: z.string().min(1, "Division is required."),
   district: z.string().min(1, "District is required."),
@@ -14,8 +15,8 @@ export const bookingSchema = z.object({
   address: z.string().min(5, "Please enter your full address."),
 
   phone: z
-    .string()
-    .min(10, "Please enter a valid phone number."),
+  .string()
+  .regex(/^01[3-9]\d{8}$/, "Please enter a valid Bangladesh phone number."),
 });
 
 export type BookingFormData = z.infer<typeof bookingSchema>;

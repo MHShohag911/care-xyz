@@ -4,6 +4,10 @@ export type BookingStatus =
     | "completed"
     | "cancelled";
 
+export type PaymentStatus =
+  | "unpaid"
+  | "paid"
+  | "refunded";
 
 export type DurationType = "hour" | "day";
 
@@ -30,6 +34,7 @@ export interface Booking {
   phone: string;
   totalCost: number;
   status: BookingStatus;
+  paymentStatus: PaymentStatus;
   createdAt: Date;
   updatedAt: Date;
 }

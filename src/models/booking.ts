@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 
 type BookingDocument = Omit<Booking, "_id"> & {
     _id: ObjectId;
+    paymentStatus?: Booking["paymentStatus"];
 }
 
 const COLLECTION_NAME = "bookings";
@@ -19,6 +20,35 @@ export async function createBooking(
     });
 
     return result.insertedId.toString();
+}
+
+export async function markBookingAsPaid(
+  bookingId: string
+): Promise<boolean> {
+  if (!ObjectId.isValid(bookingId)) {
+    return false;
+  }
+
+  const db = await getDatabase();
+
+  const result = await db
+    .collection<BookingDocument>(COLLECTION_NAME)
+    .updateOne(
+      {
+        _id: new ObjectId(bookingId),
+        paymentStatus: "unpaid",
+        status: "pending",
+      },
+      {
+        $set: {
+          paymentStatus: "paid",
+          status: "confirmed",
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+  return result.modifiedCount === 1;
 }
 
 export async function getBookingById(
@@ -39,6 +69,8 @@ export async function getBookingById(
     return {
         ...booking,
         _id: booking._id.toString(),
+        paymentStatus: booking.paymentStatus ?? "unpaid",
+        
     }
 }
 
@@ -50,6 +82,7 @@ export async function getBookingsByUserId(userId: string): Promise<Booking[]> {
     return bookings.map((booking) => ({
         ...booking,
         _id: booking._id.toString(),
+  paymentStatus: booking.paymentStatus ?? "unpaid",
     }));
 }
 
