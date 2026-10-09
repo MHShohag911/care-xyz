@@ -1,4 +1,5 @@
 import BookingStatusBadge from "@/components/booking/BookingStatusBadge";
+import PaymentStatusBadge from "@/components/booking/PaymentStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { auth } from "@/lib/auth";
 import { getBookingsByUserId } from "@/models/booking";
@@ -64,18 +65,19 @@ const MyBookingsPage = async () => {
                 key={booking._id}
                 className="rounded-2xl border border-default bg-background p-6 shadow-sm transition duration-200 hover:shadow-md sm:p-7"
               >
+
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm text-default-500">
-                      Care Service
-                    </p>
-
+                    <p className="text-sm text-default-500">Care Service</p>
                     <h2 className="mt-1 text-xl font-semibold tracking-tight">
                       {booking.serviceName}
                     </h2>
                   </div>
 
-                  <BookingStatusBadge status={booking.status} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <BookingStatusBadge status={booking.status} />
+                    <PaymentStatusBadge status={booking.paymentStatus} />
+                  </div>
                 </div>
 
                 <div className="my-6 border-t border-default" />

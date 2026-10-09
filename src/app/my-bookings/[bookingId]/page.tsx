@@ -1,10 +1,12 @@
 import BookingStatusBadge from "@/components/booking/BookingStatusBadge";
+import PaymentStatusBadge from "@/components/booking/PaymentStatusBadge";
 import CancelBookingButton from "@/components/booking/CancelBookingButton";
 import PayNowButton from "@/components/booking/PayNowButton";
 import { auth } from "@/lib/auth";
 import { getBookingById } from "@/models/booking";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import RecoverPaymentButton from "@/components/booking/RecoverPaymentButton";
 
 interface BookingDetailsPageProps {
   params: Promise<{
@@ -74,7 +76,10 @@ const BookingDetailsPage = async ({
             </p>
           </div>
 
-          <BookingStatusBadge status={booking.status} />
+          <div className="flex flex-wrap items-center gap-2">
+            <BookingStatusBadge status={booking.status} />
+            <PaymentStatusBadge status={booking.paymentStatus} />
+          </div>
         </div>
 
         {/* Main Content */}
@@ -194,6 +199,14 @@ const BookingDetailsPage = async ({
                   <div className="mt-4">
                     <CancelBookingButton bookingId={booking._id!} />
                   </div>
+                )}
+
+              {process.env.NODE_ENV === "development" &&
+                booking._id?.toString() === "6ac79b95ae774ec28e72fe12" &&
+                booking.status === "confirmed" &&
+                booking.paymentStatus === "paid" &&
+                !booking.stripePaymentIntentId && (
+                  <RecoverPaymentButton />
                 )}
             </div>
           </aside>

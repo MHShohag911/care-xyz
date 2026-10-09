@@ -7,6 +7,7 @@ export type BookingStatus =
 export type PaymentStatus =
   | "unpaid"
   | "paid"
+  | "refund_pending"
   | "refunded";
 
 export type DurationType = "hour" | "day";
@@ -35,6 +36,7 @@ export interface Booking {
   totalCost: number;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
+  stripePaymentIntentId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
