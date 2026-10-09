@@ -6,7 +6,6 @@ import { auth } from "@/lib/auth";
 import { getBookingById } from "@/models/booking";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import RecoverPaymentButton from "@/components/booking/RecoverPaymentButton";
 
 interface BookingDetailsPageProps {
   params: Promise<{
@@ -199,14 +198,6 @@ const BookingDetailsPage = async ({
                   <div className="mt-4">
                     <CancelBookingButton bookingId={booking._id!} />
                   </div>
-                )}
-
-              {process.env.NODE_ENV === "development" &&
-                booking._id?.toString() === "6ac79b95ae774ec28e72fe12" &&
-                booking.status === "confirmed" &&
-                booking.paymentStatus === "paid" &&
-                !booking.stripePaymentIntentId && (
-                  <RecoverPaymentButton />
                 )}
             </div>
           </aside>
