@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 type BookingDocument = Omit<Booking, "_id"> & {
   _id: ObjectId;
   paymentStatus?: Booking["paymentStatus"];
+  paymentEmailStatus?: "pending" | "sent" | "failed";
 }
 
 const COLLECTION_NAME = "bookings";
@@ -52,6 +53,51 @@ export async function markBookingAsPaid(
 
   return result.modifiedCount === 1;
 }
+
+
+
+export async function updatePaymentEmailStatus(
+  bookingId: string,
+  status: "pending" | "sent" | "failed",
+  errorMessage?: string
+): Promise<boolean> {
+  if (!ObjectId.isValid(bookingId)) {
+    return false;
+  }
+
+  const db = await getDatabase();
+  const now = new Date();
+
+  const updateFields: Record<string, unknown> = {
+    paymentEmailStatus: status,
+    paymentEmailLastAttemptAt: now,
+    updatedAt: now,
+  };
+
+  if (status === "sent") {
+    updateFields.paymentEmailSentAt = now;
+    updateFields.paymentEmailLastError = "";
+  } else if (status === "failed") {
+    updateFields.paymentEmailLastError =
+      errorMessage ?? "Unknown email sending error";
+  }
+
+  const result = await db
+    .collection<BookingDocument>(COLLECTION_NAME)
+    .updateOne(
+      {
+        _id: new ObjectId(bookingId),
+        paymentStatus: "paid",
+      },
+      {
+        $set: updateFields,
+        $inc: { paymentEmailAttempts: 1 },
+      }
+    );
+
+  return result.modifiedCount === 1;
+}
+
 
 export async function recoverBookingPaymentIntent(
   bookingId: string,
@@ -273,37 +319,37 @@ export async function reconcileBookingRefund(
 }
 
 export async function reconcileBookingRefundById(
-    paymentIntentId: string,
-    refundedAmount: number
+  paymentIntentId: string,
+  refundedAmount: number
 ): Promise<boolean> {
-    const db = await getDatabase();
-    const bookings = db.collection<BookingDocument>(COLLECTION_NAME);
+  const db = await getDatabase();
+  const bookings = db.collection<BookingDocument>(COLLECTION_NAME);
 
-    const booking = await bookings.findOne({
-        stripePaymentIntentId: paymentIntentId,
-        status: "confirmed",
-        paymentStatus: "refund_pending",
-    });
+  const booking = await bookings.findOne({
+    stripePaymentIntentId: paymentIntentId,
+    status: "confirmed",
+    paymentStatus: "refund_pending",
+  });
 
-    if (!booking || refundedAmount !== booking.totalCost * 100) {
-        return false;
+  if (!booking || refundedAmount !== booking.totalCost * 100) {
+    return false;
+  }
+
+  const result = await bookings.updateOne(
+    {
+      _id: booking._id,
+      status: "confirmed",
+      paymentStatus: "refund_pending",
+    },
+    {
+      $set: {
+        status: "cancelled",
+        paymentStatus: "refunded",
+        updatedAt: new Date(),
+      },
     }
+  );
 
-    const result = await bookings.updateOne(
-        {
-            _id: booking._id,
-            status: "confirmed",
-            paymentStatus: "refund_pending",
-        },
-        {
-            $set: {
-                status: "cancelled",
-                paymentStatus: "refunded",
-                updatedAt: new Date(),
-            },
-        }
-    );
-
-    return result.modifiedCount === 1;
+  return result.modifiedCount === 1;
 }
 

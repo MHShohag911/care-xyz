@@ -2,6 +2,7 @@ import { stripe } from "@/lib/stripe";
 import {
     getBookingById,
     markBookingAsPaid,
+    updatePaymentEmailStatus,
     reconcileBookingRefund,
     reconcileBookingRefundById,
 } from "@/models/booking";
@@ -116,22 +117,56 @@ export async function POST(request: Request) {
                 );
             }
 
+
             if (user) {
-                await sendPaymentConfirmationEmail({
-                    bookingId: booking._id!,
-                    customerName: user.name,
-                    customerEmail: user.email,
-                    serviceName: booking.serviceName,
-                    duration: booking.duration,
-                    phone: booking.phone,
-                    location: booking.location,
-                    totalCost: booking.totalCost,
-                    paymentMethod: "Card",
-                    paymentStatus: "Paid",
-                    paidAt: new Date(),
-                });
+                try {
+                    const emailResult = await sendPaymentConfirmationEmail({
+                        bookingId: booking._id!,
+                        customerName: user.name,
+                        customerEmail: user.email,
+                        serviceName: booking.serviceName,
+                        duration: booking.duration,
+                        phone: booking.phone,
+                        location: booking.location,
+                        totalCost: booking.totalCost,
+                        paymentMethod: "Card",
+                        paymentStatus: "Paid",
+                        paidAt: new Date(),
+                    });
+
+                    if (emailResult.error) {
+                        await updatePaymentEmailStatus(
+                            bookingId,
+                            "failed",
+                            emailResult.error.message
+                        );
+                        console.error(
+                            `Payment confirmation email failed for booking ${bookingId}:`,
+                            emailResult.error
+                        );
+                    } else {
+                        await updatePaymentEmailStatus(bookingId, "sent");
+                        console.log(
+                            `Payment confirmation email sent for booking ${bookingId}.`
+                        );
+                    }
+                } catch (error) {
+                    await updatePaymentEmailStatus(
+                        bookingId,
+                        "failed",
+                        error instanceof Error ? error.message : String(error)
+                    );
+                    console.error(
+                        `Payment confirmation email failed for booking ${bookingId}:`,
+                        error
+                    );
+                }
+            } else {
+                await updatePaymentEmailStatus(bookingId, "failed");
             }
+
         }
+
 
         if (!updated) {
             console.error(

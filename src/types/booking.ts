@@ -39,4 +39,11 @@ export interface Booking {
   stripePaymentIntentId?: string;
   createdAt: Date;
   updatedAt: Date;
+
+  // Payment confirmation email tracking
+  paymentEmailStatus?: "pending" | "sent" | "failed";
+  paymentEmailAttempts?: number;
+  paymentEmailLastAttemptAt?: Date;
+  paymentEmailLastError?: string;
+  paymentEmailSentAt?: Date;
 }
