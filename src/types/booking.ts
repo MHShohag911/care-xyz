@@ -41,7 +41,7 @@ export interface Booking {
   updatedAt: Date;
 
   // Payment confirmation email tracking
-  paymentEmailStatus?: "pending" | "sent" | "failed";
+  paymentEmailStatus?: "pending" | "sending" | "sent" | "failed";
   paymentEmailAttempts?: number;
   paymentEmailLastAttemptAt?: Date;
   paymentEmailLastError?: string;

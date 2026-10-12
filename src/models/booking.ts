@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb";
 type BookingDocument = Omit<Booking, "_id"> & {
   _id: ObjectId;
   paymentStatus?: Booking["paymentStatus"];
-  paymentEmailStatus?: "pending" | "sent" | "failed";
+  paymentEmailStatus?: Booking["paymentEmailStatus"];
 }
 
 const COLLECTION_NAME = "bookings";
@@ -55,7 +55,6 @@ export async function markBookingAsPaid(
 }
 
 
-
 export async function updatePaymentEmailStatus(
   bookingId: string,
   status: "pending" | "sent" | "failed",
@@ -70,7 +69,6 @@ export async function updatePaymentEmailStatus(
 
   const updateFields: Record<string, unknown> = {
     paymentEmailStatus: status,
-    paymentEmailLastAttemptAt: now,
     updatedAt: now,
   };
 
@@ -91,12 +89,72 @@ export async function updatePaymentEmailStatus(
       },
       {
         $set: updateFields,
-        $inc: { paymentEmailAttempts: 1 },
       }
     );
 
   return result.modifiedCount === 1;
 }
+
+
+
+export async function claimPaymentEmailAttempt(
+  bookingId: string,
+  maxAttempts = 3
+): Promise<boolean> {
+  if (!ObjectId.isValid(bookingId)) {
+    return false;
+  }
+
+  const db = await getDatabase();
+  const now = new Date();
+  const staleBefore = new Date(now.getTime() - 10 * 60 * 1000);
+
+  const result = await db
+    .collection<BookingDocument>(COLLECTION_NAME)
+    .updateOne(
+      {
+        _id: new ObjectId(bookingId),
+        paymentStatus: "paid",
+        $and: [
+          {
+            $or: [
+              { paymentEmailAttempts: { $lt: maxAttempts } },
+              { paymentEmailAttempts: { $exists: false } },
+            ],
+          },
+          {
+            $or: [
+              {
+                paymentEmailStatus: {
+                  $in: ["pending", "failed"],
+                },
+              },
+              {
+                paymentEmailStatus: { $exists: false },
+              },
+              {
+                paymentEmailStatus: "sending",
+                paymentEmailLastAttemptAt: { $lte: staleBefore },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        $set: {
+          paymentEmailStatus: "sending",
+          paymentEmailLastAttemptAt: now,
+          updatedAt: now,
+        },
+        $inc: {
+          paymentEmailAttempts: 1,
+        },
+      }
+    );
+
+  return result.modifiedCount === 1;
+}
+
 
 
 export async function recoverBookingPaymentIntent(
